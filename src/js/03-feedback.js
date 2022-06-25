@@ -1,67 +1,54 @@
 import throttle from 'lodash.throttle';
+import "../css//03-feedback.css";
+import "../css//common.css";
 
-const formRef = document.querySelector('.feedback-form');
+ const formData ={}
+const STORAGE_KEY = "feedback-form-state";
 
-const STORAGE_KEY = 'feedback-form-state';
 
-const inputHandler = e => {
-  const { name, value } = e.target;
+const form = document.querySelector('.feedback-form')
+const textarea = document.querySelector('.feedback-form textarea')
+const input = document.querySelector('.feedback-form input')
 
-  const savedData = localStorage.getItem(STORAGE_KEY);
-  const parsedData = JSON.parse(savedData);
 
-  const formData = {
-    ...parsedData,
-    [name]: value,
-  };
 
-  const serlizedData = JSON.stringify(formData);
-  localStorage.setItem(STORAGE_KEY, serlizedData);
-};
+form.addEventListener ('input', throttle(onFormInput, 500))
+form.addEventListener('submit', onFormSubmit)
+populateData()
 
-const rehydrateData = () => {
-  const savedData = localStorage.getItem(STORAGE_KEY);
-  const parsedData = JSON.parse(savedData);
-
-  if (!parsedData) {
-    return;
-  }
-
-  const inputNames = Object.keys(parsedData);
-
-  inputNames.forEach(inputName => {
-    const input = formRef.elements[inputName];
-
-    input.value = parsedData[inputName];
-  });
-};
-
-rehydrateData();
-
-const submitHandler = e => {
-  e.preventDefault();
-  const form = e.currentTarget;
-  const formData = new FormData(form);
-  const finalData = {};
-
-  for (const [key, value] of formData.entries()) {
-    if (!value) {
-      alert('You must fill in all the fields!');
-      return;
+function onFormSubmit(event){
+    event.preventDefault()
+    
+    if(!input.value || !textarea.value){
+        alert('Заповніть всі поля')
     }
-    finalData[key] = value;
-  }
+    
+    else{
+        console.log(formData) 
+        event.currentTarget.reset()
+        localStorage.removeItem(STORAGE_KEY)
+         formData[input.name] = ''
+        formData[textarea.name] = ''
+    }
+}
 
-  console.log(finalData);
+function onFormInput(event) {
+formData[event.target.name] = event.target.value
+// console.log(formData) 
+localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
+}
 
-  form.reset();
-  localStorage.removeItem(STORAGE_KEY);
-};
-
-formRef.addEventListener(
-  'input',
-  throttle(evt => {
-    inputHandler(evt);
-  }, 500)
-);
-formRef.addEventListener('submit', submitHandler);
+function populateData(){
+const savedData = localStorage.getItem(STORAGE_KEY)
+const parsData = JSON.parse(savedData)
+if(savedData){
+    if(parsData.email){
+        formData[input.name] = parsData.email
+        input.value = parsData.email
+    }
+    if(parsData.message){
+        formData[textarea.name] = parsData.message
+        textarea.value = parsData.message
+    }
+}
+}
